@@ -1,0 +1,6 @@
+{
+  "name": "$ROOSTED - The owl saw your trades",
+  "description": "The real on-chain wallet roasting website for $ROOSTED. The owl inspects your actual token trades and delivers your cooked score.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

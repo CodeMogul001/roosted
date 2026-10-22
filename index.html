@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Defensive guard against browser extension injection collisions (e.g., Zerion, MetaMask, Phantom)
+      (function() {
+        try {
+          var origDefineProperty = Object.defineProperty;
+          Object.defineProperty = function(obj, prop, descriptor) {
+            try {
+              return origDefineProperty.call(Object, obj, prop, descriptor);
+            } catch (err) {
+              if (
+                err instanceof TypeError &&
+                (String(prop).toLowerCase().includes('zerion') ||
+                 String(err.message).toLowerCase().includes('cannot redefine property'))
+              ) {
+                try {
+                  if (descriptor && 'value' in descriptor) {
+                    obj[prop] = descriptor.value;
+                  }
+                } catch (_) {}
+                return obj;
+              }
+              throw err;
+            }
+          };
+
+          window.addEventListener('error', function(event) {
+            var msg = (event.message || (event.error && event.error.message) || '').toLowerCase();
+            var file = (event.filename || '').toLowerCase();
+            if (
+              msg.includes('iszerion') ||
+              msg.includes('cannot redefine property') ||
+              file.includes('chrome-extension://') ||
+              file.includes('moz-extension://')
+            ) {
+              event.preventDefault();
+              event.stopImmediatePropagation();
+              return true;
+            }
+          }, true);
+
+          window.addEventListener('unhandledrejection', function(event) {
+            var reason = event.reason;
+            var msg = (reason && (reason.message || String(reason)) || '').toLowerCase();
+            if (
+              msg.includes('iszerion') ||
+              msg.includes('cannot redefine property') ||
+              msg.includes('chrome-extension://')
+            ) {
+              event.preventDefault();
+              event.stopImmediatePropagation();
+            }
+          }, true);
+        } catch (_) {}
+      })();
+    </script>
+    <title>$ROOSTED - The owl saw your trades</title>
+    <meta name="description" content="The real on-chain wallet roasting website for $ROOSTED. The owl inspects your actual token trades and delivers your cooked score." />
+    <meta property="og:title" content="$ROOSTED - The owl saw your trades" />
+    <meta property="og:description" content="The real on-chain wallet roasting website for $ROOSTED. The owl inspects your actual token trades and delivers your cooked score." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
