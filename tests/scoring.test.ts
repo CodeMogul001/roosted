@@ -21,10 +21,16 @@ function runTests() {
   }
 
   // 1. Address Validation Tests
+  const validNearNamed = 'owltrader.near';
+  const validNearTg = 'crypto_rooster.tg';
+  const validNearImplicit = '9876543210abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
   const validEvm = '0x8b32A461E63C47137f6a73562bC0c804A66B9a99';
   const validSolana = '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU';
   const invalidAddress = '0x123notanaddress';
 
+  assert(validateWalletAddress(validNearNamed).valid === true && validateWalletAddress(validNearNamed).network === 'NEAR Protocol', 'Valid NEAR named (.near) address passes validation');
+  assert(validateWalletAddress(validNearTg).valid === true && validateWalletAddress(validNearTg).network === 'NEAR Protocol', 'Valid NEAR Telegram (.tg) address passes validation');
+  assert(validateWalletAddress(validNearImplicit).valid === true && validateWalletAddress(validNearImplicit).network === 'NEAR Protocol', 'Valid NEAR 64-hex implicit address passes validation');
   assert(validateWalletAddress(validEvm).valid === true, 'Valid EVM address passes validation');
   assert(validateWalletAddress(validSolana).valid === true, 'Valid Solana address passes validation');
   assert(validateWalletAddress(invalidAddress).valid === false, 'Malformed address rejected');

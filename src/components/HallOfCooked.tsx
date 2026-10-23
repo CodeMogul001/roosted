@@ -75,7 +75,7 @@ export const HallOfCooked: React.FC<HallOfCookedProps> = ({
             The Hall of Cooked Is Empty
           </h3>
           <p className="text-sm text-zinc-400 leading-relaxed max-w-md mb-6">
-            All demo wallets have been removed. Wallets are added to this leaderboard <strong className="text-white">only when they paste an address that holds $ROOSTED tokens</strong> and get audited.
+            Wallets are added to this leaderboard <strong className="text-white">only when they paste an address that holds $ROOSTED tokens</strong> and get audited.
           </p>
           <a
             href="#roast"

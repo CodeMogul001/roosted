@@ -3,7 +3,7 @@ export type RoastLevel = 'RAW' | 'MEDIUM' | 'WELL DONE' | 'CHARCOAL';
 export interface TokenStatus {
   isLive: boolean;
   contractAddress: string;
-  network: 'Base' | 'Solana' | 'Ethereum';
+  network: 'NEAR Protocol' | 'NEAR' | 'Base' | 'Solana' | 'Ethereum';
   symbol: string;
   name: string;
   tagline: string;

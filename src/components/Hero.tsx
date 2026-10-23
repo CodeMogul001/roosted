@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Check, ArrowRight, ShieldCheck, Flame, Info } from 'lucide-react';
+import { Copy, Check, ArrowRight, ShieldCheck, Flame } from 'lucide-react';
 import mascotImg from '../assets/images/roosted_owl_mascot_orange_1792700795860.jpg';
 import { TokenStatus } from '../types/roast.ts';
 
@@ -7,14 +7,12 @@ interface HeroProps {
   tokenStatus: TokenStatus;
   onRoastSubmit: (address: string) => void;
   isLoading: boolean;
-  onOpenTestFlight: () => void;
 }
 
 export const Hero: React.FC<HeroProps> = ({
   tokenStatus,
   onRoastSubmit,
-  isLoading,
-  onOpenTestFlight
+  isLoading
 }) => {
   const [addressInput, setAddressInput] = useState('');
   const [copiedCa, setCopiedCa] = useState(false);
@@ -115,7 +113,7 @@ export const Hero: React.FC<HeroProps> = ({
                     setAddressInput(e.target.value);
                     if (inputError) setInputError(null);
                   }}
-                  placeholder="Paste public wallet address (0x... or Solana Base58)"
+                  placeholder="Paste public wallet address (e.g. user.near, 0x..., or Solana)"
                   className="w-full px-3.5 py-2.5 bg-transparent text-sm sm:text-base font-mono text-white placeholder-zinc-500 focus:outline-none"
                   autoComplete="off"
                   spellCheck="false"
@@ -223,17 +221,9 @@ export const Hero: React.FC<HeroProps> = ({
                 )}
               </button>
             </div>
-            <div className="flex items-center gap-3">
-              <span>Target Network: {tokenStatus.network}</span>
-              <span>•</span>
-              <button
-                type="button"
-                onClick={onOpenTestFlight}
-                className="text-orange-400 hover:text-orange-300 hover:underline flex items-center gap-1"
-              >
-                <Info className="w-3 h-3" />
-                Test Flight Simulator
-              </button>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-zinc-400">Network: <strong className="text-zinc-200">{tokenStatus.network} Mainnet</strong></span>
             </div>
           </div>
         </div>

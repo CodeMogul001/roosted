@@ -5,7 +5,6 @@ import { RoastResultCard } from './components/RoastResultCard.tsx';
 import { HallOfCooked } from './components/HallOfCooked.tsx';
 import { HowItWorks } from './components/HowItWorks.tsx';
 import { PreLaunchModal } from './components/PreLaunchModal.tsx';
-import { TestFlightModal } from './components/TestFlightModal.tsx';
 import { RemovalModal } from './components/RemovalModal.tsx';
 import { Footer } from './components/Footer.tsx';
 import { TokenStatus, RoastAnalysisResult, HallOfCookedEntry } from './types/roast.ts';
@@ -15,7 +14,7 @@ export default function App() {
   const [tokenStatus, setTokenStatus] = useState<TokenStatus>({
     isLive: false,
     contractAddress: 'CA: COMING SOON',
-    network: 'Base',
+    network: 'NEAR Protocol',
     symbol: '$ROOSTED',
     name: 'Roosted Token',
     tagline: 'The owl saw your trades.',
@@ -31,7 +30,6 @@ export default function App() {
 
   // Modals
   const [isPreLaunchOpen, setIsPreLaunchOpen] = useState(false);
-  const [isTestFlightOpen, setIsTestFlightOpen] = useState(false);
   const [isRemovalOpen, setIsRemovalOpen] = useState(false);
   const [lastEnteredAddress, setLastEnteredAddress] = useState('');
 
@@ -135,19 +133,11 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSelectTestFlightResult = (result: RoastAnalysisResult) => {
-    setCurrentResult(result);
-    const newUrl = `${window.location.pathname}?roast=${result.id}`;
-    window.history.pushState({ path: newUrl }, '', newUrl);
-    window.scrollTo({ top: 180, behavior: 'smooth' });
-  };
-
   return (
     <div className="min-h-screen bg-[#070709] text-zinc-100 flex flex-col font-sans selection:bg-orange-500 selection:text-black">
       {/* Top Bar Navigation */}
       <Navbar 
         isLive={tokenStatus.isLive} 
-        onOpenTestFlight={() => setIsTestFlightOpen(true)} 
       />
 
       {/* In-app Notification Banner */}
@@ -193,7 +183,6 @@ export default function App() {
             tokenStatus={tokenStatus}
             onRoastSubmit={handleRoastSubmit}
             isLoading={isLoading}
-            onOpenTestFlight={() => setIsTestFlightOpen(true)}
           />
         )}
 
@@ -212,14 +201,7 @@ export default function App() {
       <PreLaunchModal
         isOpen={isPreLaunchOpen}
         onClose={() => setIsPreLaunchOpen(false)}
-        onOpenTestFlight={() => setIsTestFlightOpen(true)}
         enteredAddress={lastEnteredAddress}
-      />
-
-      <TestFlightModal
-        isOpen={isTestFlightOpen}
-        onClose={() => setIsTestFlightOpen(false)}
-        onSelectResult={handleSelectTestFlightResult}
       />
 
       <RemovalModal

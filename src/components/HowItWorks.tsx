@@ -8,7 +8,7 @@ export const HowItWorks: React.FC = () => {
       title: 'PASTE YOUR WALLET',
       description: 'Enter your public wallet address.',
       icon: Search,
-      sub: 'Supports EVM (Base/ETH) and Solana public keys.'
+      sub: 'Supports NEAR, EVM (Base/ETH) and Solana public addresses.'
     },
     {
       num: '02',

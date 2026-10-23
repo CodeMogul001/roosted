@@ -3,10 +3,9 @@ import mascotImg from '../assets/images/roosted_owl_mascot_orange_1792700795860.
 
 interface NavbarProps {
   isLive: boolean;
-  onOpenTestFlight?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ isLive, onOpenTestFlight }) => {
+export const Navbar: React.FC<NavbarProps> = ({ isLive }) => {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-zinc-800/80 bg-[#070709]/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-8">
@@ -41,15 +40,6 @@ export const Navbar: React.FC<NavbarProps> = ({ isLive, onOpenTestFlight }) => {
           >
             X (Twitter)
           </a>
-          {onOpenTestFlight && (
-            <button 
-              type="button" 
-              onClick={onOpenTestFlight} 
-              className="text-xs text-zinc-500 hover:text-orange-400 transition-colors whitespace-nowrap shrink-0"
-            >
-              Indexer Inspector
-            </button>
-          )}
         </nav>
 
         {/* Zone 3: 1 Primary Action (Disabled until launch) */}

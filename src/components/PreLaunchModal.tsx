@@ -1,18 +1,16 @@
 import React from 'react';
-import { X, Clock, Eye, Sparkles } from 'lucide-react';
+import { X, Clock } from 'lucide-react';
 import mascotImg from '../assets/images/roosted_owl_mascot_orange_1792700795860.jpg';
 
 interface PreLaunchModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onOpenTestFlight: () => void;
   enteredAddress?: string;
 }
 
 export const PreLaunchModal: React.FC<PreLaunchModalProps> = ({
   isOpen,
   onClose,
-  onOpenTestFlight,
   enteredAddress
 }) => {
   if (!isOpen) return null;
@@ -48,7 +46,7 @@ export const PreLaunchModal: React.FC<PreLaunchModalProps> = ({
             <strong className="text-white font-semibold">$ROOSTED has not launched yet.</strong> The official contract address is currently pending deployment (<code className="px-1.5 py-0.5 rounded bg-zinc-800 text-xs font-mono text-orange-400">CA: COMING SOON</code>).
           </p>
           <p className="text-xs text-zinc-400">
-            Unlike fake meme tools that fabricate simulated trades, $ROOSTED is engineered to read <strong className="text-zinc-200">actual on-chain ledger records</strong> directly from the blockchain indexer. Because the token is not yet live, no trades exist to roast.
+            Unlike fake meme tools that fabricate simulated trades, $ROOSTED is engineered to read <strong className="text-zinc-200">actual on-chain ledger records</strong> directly from the blockchain indexer on NEAR Protocol mainnet. Because the token is not yet live, no trades exist to roast.
           </p>
           {enteredAddress && (
             <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800 font-mono text-xs text-zinc-400">
@@ -58,23 +56,11 @@ export const PreLaunchModal: React.FC<PreLaunchModalProps> = ({
           )}
         </div>
 
-        <div className="mt-6 pt-5 border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              onClose();
-              onOpenTestFlight();
-            }}
-            className="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-black text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all shadow-md shadow-orange-500/20"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-black" />
-            Inspect Test Flight Engine
-          </button>
-
+        <div className="mt-6 pt-5 border-t border-zinc-800 flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition-colors"
+            className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-orange-500 hover:bg-orange-400 text-black text-xs font-extrabold transition-all shadow-md shadow-orange-500/20"
           >
             Understood
           </button>
