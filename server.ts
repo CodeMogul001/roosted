@@ -97,6 +97,10 @@ app.post('/api/roast/analyze', async (req: Request, res: Response) => {
       result.metrics.netTokenBalanceNumber = holdingCheck.balanceNumber;
       result.metrics.netTokenBalance = holdingCheck.balanceFormatted;
 
+      if (holdingCheck.portfolio) {
+        result.portfolio = holdingCheck.portfolio;
+      }
+
       roastResultsCache.set(result.id, result);
       roastResultsCache.set(address.toLowerCase(), result);
 
@@ -140,12 +144,18 @@ app.post('/api/roast/analyze', async (req: Request, res: Response) => {
         holdingAmount: holdingCheck.balanceFormatted,
         walletAddress: address,
         network: holdingCheck.network,
+        portfolio: holdingCheck.portfolio,
         message: `Verified $ROOSTED holder on ${holdingCheck.network}. Added to Hall of Cooked!`,
         data: result
       });
       return;
     } else {
       // Wallet is NOT holding $ROOSTED token
+      const tokensCount = holdingCheck.portfolio?.totalTokensCount || 0;
+      const scanDetail = tokensCount > 0 
+        ? `The owl identified ${tokensCount} NEAR token(s) in this wallet, but found 0 $ROOSTED.`
+        : `The owl queried the blockchain indexer. Wallet ${address} does not hold any $ROOSTED tokens.`;
+
       res.json({
         success: true,
         status: 'not_holding',
@@ -153,7 +163,8 @@ app.post('/api/roast/analyze', async (req: Request, res: Response) => {
         holdingAmount: '0 $ROOSTED',
         walletAddress: address,
         network: holdingCheck.network,
-        message: `The owl queried the blockchain indexer. Wallet ${address} does not hold any $ROOSTED tokens.`
+        portfolio: holdingCheck.portfolio,
+        message: scanDetail
       });
       return;
     }
@@ -165,6 +176,30 @@ app.post('/api/roast/analyze', async (req: Request, res: Response) => {
       status: 'error',
       message: `Blockchain indexer check could not be completed: ${errorMsg}. Please try again.`
     });
+  }
+});
+
+// 2b. Standalone NEAR Mainnet Wallet Token Portfolio Scanner Endpoint
+app.get('/api/wallet/tokens/:address', async (req: Request, res: Response) => {
+  const { address } = req.params;
+  const validation = validateWalletAddress(address);
+  if (!validation.valid) {
+    res.status(400).json({ success: false, message: validation.error || 'Invalid address' });
+    return;
+  }
+
+  try {
+    const holdingCheck = await checkWalletTokenHolding(address);
+    res.json({
+      success: true,
+      walletAddress: address,
+      network: holdingCheck.network,
+      isHolder: holdingCheck.isHolder,
+      portfolio: holdingCheck.portfolio
+    });
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ success: false, message: errorMsg });
   }
 });
 

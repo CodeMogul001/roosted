@@ -28,6 +28,38 @@ export interface TradingMetrics {
   lastTradeTimestamp: number | null;
 }
 
+export interface NearTokenHolding {
+  contractId: string;
+  symbol: string;
+  name: string;
+  balanceRaw: string;
+  balanceFormatted: string;
+  balanceNumber: number;
+  decimals: number;
+  icon?: string | null;
+  isRoosted: boolean;
+  category: 'native' | 'roosted' | 'stablecoin' | 'ecosystem' | 'defi' | 'meme' | 'ft';
+  explorerUrl?: string;
+  dexUrl?: string | null;
+}
+
+export interface NearWalletPortfolio {
+  walletAddress: string;
+  network: string;
+  totalTokensCount: number;
+  hasRoosted: boolean;
+  roostedAmount: string;
+  nativeNear: {
+    balanceRaw: string;
+    balanceFormatted: string;
+    balanceNumber: number;
+    symbol: 'NEAR';
+  } | null;
+  tokens: NearTokenHolding[];
+  analyzedAt: number;
+  dataSource: string;
+}
+
 export interface RoastAnalysisResult {
   id: string;
   walletAddress: string;
@@ -42,6 +74,7 @@ export interface RoastAnalysisResult {
   tokenContract: string;
   verifiedTransactionsCount: number;
   evidenceSummary: string[];
+  portfolio?: NearWalletPortfolio;
 }
 
 export type AnalysisStatus = 
@@ -60,6 +93,7 @@ export interface AnalysisResponse {
   holdingAmount?: string;
   walletAddress?: string;
   network?: string;
+  portfolio?: NearWalletPortfolio;
   data?: RoastAnalysisResult;
 }
 

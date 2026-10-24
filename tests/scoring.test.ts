@@ -139,7 +139,7 @@ async function runTests() {
   }
 
   // 4. Blockchain Indexer Holding Verification Tests
-  const { checkWalletTokenHolding } = await import('../src/server/blockchain.ts');
+  const { checkWalletTokenHolding, fetchNearWalletPortfolio, formatTokenBalance } = await import('../src/server/blockchain.ts');
   const holderCheck = await checkWalletTokenHolding('owltrader.near');
   assert(holderCheck.isHolder === true, 'Indexer correctly verifies wallet holding $ROOSTED');
   assert(holderCheck.balanceNumber > 0, 'Indexer reports positive token balance for holder');
@@ -147,6 +147,17 @@ async function runTests() {
   const nonHolderCheck = await checkWalletTokenHolding('0x8b32A461E63C47137f6a73562bC0c804A66B9a99');
   assert(nonHolderCheck.isHolder === false, 'Indexer correctly reports non-holder wallet');
   assert(nonHolderCheck.balanceNumber === 0, 'Non-holder balance is 0');
+
+  // 5. Multi-Token Analysis & Identification on NEAR Mainnet
+  const fmt1 = formatTokenBalance('1000000', 6);
+  assert(fmt1.formatted === '1' && fmt1.numeric === 1, 'formatTokenBalance correctly formats 6 decimal tokens');
+  const fmt2 = formatTokenBalance('180000000000000000000000', 18);
+  assert(fmt2.numeric === 180000, 'formatTokenBalance correctly handles 18 decimal tokens');
+
+  const portfolio = await fetchNearWalletPortfolio('owltrader.near');
+  assert(portfolio.totalTokensCount >= 1, 'fetchNearWalletPortfolio identifies tokens in wallet');
+  assert(portfolio.hasRoosted === true, 'Identifies $ROOSTED token in holder portfolio');
+  assert(portfolio.tokens.some(t => t.isRoosted), 'Marks $ROOSTED token with isRoosted: true');
 
   console.log(`\nTests Completed: ${passed} Passed, ${failed} Failed`);
   if (failed > 0) {

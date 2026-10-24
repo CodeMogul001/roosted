@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Share2, Download, RotateCcw, Check, ExternalLink, ShieldAlert } from 'lucide-react';
 import { RoastAnalysisResult, RoastLevel } from '../types/roast.ts';
 import { downloadRoastCardPNG } from '../utils/generateCardImage.ts';
+import { NearTokenPortfolio } from './NearTokenPortfolio.tsx';
 import mascotImg from '../assets/images/roosted_owl_mascot_orange_1792700795860.jpg';
 
 interface RoastResultCardProps {
@@ -228,6 +229,13 @@ export const RoastResultCard: React.FC<RoastResultCardProps> = ({ result, onRese
             </p>
           </div>
         </div>
+
+        {/* NEAR Protocol Mainnet Token Holdings Audit */}
+        {result.portfolio && (
+          <div className="mt-8">
+            <NearTokenPortfolio portfolio={result.portfolio} />
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 border-t border-zinc-800">

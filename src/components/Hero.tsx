@@ -102,8 +102,8 @@ export const Hero: React.FC<HeroProps> = ({
         <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white max-w-3xl leading-[1.15] text-balance mb-4">
           Paste your wallet. The owl will judge you.
         </h1>
-        <p className="text-base sm:text-lg text-zinc-400 max-w-xl text-balance mb-8">
-          Every $ROOSTED trade tells a story. Let’s find out how cooked yours is.
+        <p className="text-base sm:text-lg text-zinc-400 max-w-2xl text-balance mb-8">
+          The owl scans and identifies every token in your NEAR wallet, checks your $ROOSTED holding status, and serves your brutal on-chain trade audit.
         </p>
 
         {/* Wallet Input Form */}
@@ -118,7 +118,7 @@ export const Hero: React.FC<HeroProps> = ({
                     setAddressInput(e.target.value);
                     if (inputError) setInputError(null);
                   }}
-                  placeholder="Paste public wallet address (e.g. user.near, 0x..., or Solana)"
+                  placeholder="Paste NEAR wallet address (e.g. user.near, .tg, or 64-hex)"
                   className="w-full px-3.5 py-2.5 bg-transparent text-sm sm:text-base font-mono text-white placeholder-zinc-500 focus:outline-none"
                   autoComplete="off"
                   spellCheck="false"
@@ -150,12 +150,12 @@ export const Hero: React.FC<HeroProps> = ({
                 {isLoading ? (
                   <span className="flex items-center gap-2">
                     <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                    INSPECTING TRADES...
+                    ANALYZING TOKENS & TRADES...
                   </span>
                 ) : (
                   <>
                     <Flame className="w-4 h-4 text-black" />
-                    ROAST ME
+                    ANALYZE & ROAST
                     <ArrowRight className="w-4 h-4 text-black" />
                   </>
                 )}
@@ -169,11 +169,11 @@ export const Hero: React.FC<HeroProps> = ({
             )}
           </form>
 
-          {/* Trust Marker */}
+          {/* Trust Marker & Multi-Token Scanner capability */}
           <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-zinc-500 font-mono">
             <span className="flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4 text-orange-400/80" />
-              Read-only. Live NEAR indexer verification. Public ledger data only.
+              Focus on NEAR chain mainnet tokens (identifies all NEP-141 tokens & native NEAR)
             </span>
           </div>
         </div>

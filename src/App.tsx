@@ -8,7 +8,7 @@ import { PreLaunchModal } from './components/PreLaunchModal.tsx';
 import { RemovalModal } from './components/RemovalModal.tsx';
 import { HoldingStatusModal } from './components/HoldingStatusModal.tsx';
 import { Footer } from './components/Footer.tsx';
-import { TokenStatus, RoastAnalysisResult, HallOfCookedEntry } from './types/roast.ts';
+import { TokenStatus, RoastAnalysisResult, HallOfCookedEntry, NearWalletPortfolio } from './types/roast.ts';
 import { AlertCircle, AlertTriangle } from 'lucide-react';
 
 export default function App() {
@@ -38,6 +38,7 @@ export default function App() {
     walletAddress: string;
     holdingAmount: string;
     network?: string;
+    portfolio?: NearWalletPortfolio;
   } | null>(null);
   const [lastEnteredAddress, setLastEnteredAddress] = useState('');
 
@@ -123,7 +124,8 @@ export default function App() {
           isHolder: true,
           walletAddress: address,
           holdingAmount: data.holdingAmount || 'Verified $ROOSTED',
-          network: data.network || 'NEAR Protocol'
+          network: data.network || 'NEAR Protocol',
+          portfolio: data.portfolio || data.data.portfolio
         });
 
         // Update URL query string
@@ -139,7 +141,8 @@ export default function App() {
           isHolder: false,
           walletAddress: address,
           holdingAmount: '0 $ROOSTED',
-          network: data.network || 'NEAR Protocol'
+          network: data.network || 'NEAR Protocol',
+          portfolio: data.portfolio
         });
       }
     } catch (err) {
@@ -234,6 +237,7 @@ export default function App() {
           walletAddress={holdingModal.walletAddress}
           holdingAmount={holdingModal.holdingAmount}
           network={holdingModal.network}
+          portfolio={holdingModal.portfolio}
           onViewHallOfCooked={() => {
             const el = document.getElementById('hall-of-cooked');
             if (el) el.scrollIntoView({ behavior: 'smooth' });
