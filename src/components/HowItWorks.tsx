@@ -75,11 +75,16 @@ export const HowItWorks: React.FC = () => {
       </div>
 
       {/* Trust Notice Box */}
-      <div className="mt-12 p-4 rounded-xl bg-zinc-950 border border-zinc-800/80 max-w-2xl mx-auto flex items-center gap-3 text-xs text-zinc-400 font-mono">
-        <ShieldCheck className="w-5 h-5 text-orange-400 shrink-0" />
-        <span>
-          We will never request seed phrases, signatures, or transaction approvals. Public ledger data only.
-        </span>
+      <div className="mt-12 p-4 rounded-xl bg-zinc-950 border border-zinc-800/80 max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono">
+        <div className="flex items-center gap-3 text-zinc-400">
+          <ShieldCheck className="w-5 h-5 text-orange-400 shrink-0" />
+          <span>
+            We will never request seed phrases, signatures, or transaction approvals. Public ledger data only.
+          </span>
+        </div>
+        <div className="shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-md bg-orange-500/10 border border-orange-500/25 text-amber-300 font-semibold">
+          <span>1% tax to holders</span>
+        </div>
       </div>
     </section>
   );

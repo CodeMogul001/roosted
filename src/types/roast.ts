@@ -46,6 +46,7 @@ export interface RoastAnalysisResult {
 
 export type AnalysisStatus = 
   | 'success'
+  | 'not_holding'
   | 'token_not_launched'
   | 'no_activity'
   | 'invalid_address'
@@ -55,6 +56,10 @@ export interface AnalysisResponse {
   success: boolean;
   status: AnalysisStatus;
   message: string;
+  isHolder?: boolean;
+  holdingAmount?: string;
+  walletAddress?: string;
+  network?: string;
   data?: RoastAnalysisResult;
 }
 

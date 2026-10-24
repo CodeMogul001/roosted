@@ -5,7 +5,7 @@ import {
   RawTransactionRecord 
 } from '../src/utils/scoringEngine.ts';
 
-function runTests() {
+async function runTests() {
   console.log('--- Starting $ROOSTED Unit & Integration Tests ---');
   let passed = 0;
   let failed = 0;
@@ -36,9 +36,8 @@ function runTests() {
   assert(validateWalletAddress(invalidAddress).valid === false, 'Malformed address rejected');
   assert(validateWalletAddress('').valid === false, 'Empty address rejected');
 
-  // 2. Pre-launch Status Checks
-  // Without ROOSTED_CONTRACT_ADDRESS set, isTokenLive() must be false
-  assert(isTokenLive() === false, 'Token correctly identified as NOT launched prior to CA deployment');
+  // 2. Token Status & Indexer Holding Checks
+  assert(isTokenLive() === true, 'Token correctly identified as live on NEAR Protocol mainnet');
 
   // 3. Scoring & Classification Tests
   const now = Date.now();
@@ -138,6 +137,16 @@ function runTests() {
   } catch (err: unknown) {
     assert(true, 'Empty transactions gracefully rejected with error');
   }
+
+  // 4. Blockchain Indexer Holding Verification Tests
+  const { checkWalletTokenHolding } = await import('../src/server/blockchain.ts');
+  const holderCheck = await checkWalletTokenHolding('owltrader.near');
+  assert(holderCheck.isHolder === true, 'Indexer correctly verifies wallet holding $ROOSTED');
+  assert(holderCheck.balanceNumber > 0, 'Indexer reports positive token balance for holder');
+
+  const nonHolderCheck = await checkWalletTokenHolding('0x8b32A461E63C47137f6a73562bC0c804A66B9a99');
+  assert(nonHolderCheck.isHolder === false, 'Indexer correctly reports non-holder wallet');
+  assert(nonHolderCheck.balanceNumber === 0, 'Non-holder balance is 0');
 
   console.log(`\nTests Completed: ${passed} Passed, ${failed} Failed`);
   if (failed > 0) {

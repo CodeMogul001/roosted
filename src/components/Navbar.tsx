@@ -19,6 +19,9 @@ export const Navbar: React.FC<NavbarProps> = ({ isLive }) => {
           <span className="text-xl font-extrabold tracking-tight text-white group-hover:text-orange-400 transition-colors">
             $ROOSTED
           </span>
+          <span className="hidden sm:inline-flex items-center text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/25">
+            1% tax to holders
+          </span>
         </a>
 
         {/* Zone 2: Navigation Links */}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Check, ArrowRight, ShieldCheck, Flame } from 'lucide-react';
+import { Copy, Check, ArrowRight, ShieldCheck, Flame, Percent, ExternalLink } from 'lucide-react';
 import mascotImg from '../assets/images/roosted_owl_mascot_orange_1792700795860.jpg';
 import { TokenStatus } from '../types/roast.ts';
 
@@ -57,11 +57,11 @@ export const Hero: React.FC<HeroProps> = ({
       {/* Hero Container */}
       <div className="relative flex flex-col items-center text-center">
         {/* Token Pre-Launch / Live Status Strip */}
-        <div className="mb-8 inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-800 text-xs text-zinc-300 shadow-sm">
+        <div className="mb-8 inline-flex flex-wrap items-center justify-center gap-2.5 px-4 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-800 text-xs text-zinc-300 shadow-sm">
           <span className="font-bold text-orange-400 tracking-wider uppercase">
             {tokenStatus.isLive ? 'TOKEN LIVE' : 'STATUS: COMING SOON'}
           </span>
-          <span className="text-zinc-600">|</span>
+          <span className="text-zinc-600 hidden sm:inline">|</span>
           <span className="font-mono text-zinc-400">
             {tokenStatus.contractAddress}
           </span>
@@ -73,6 +73,11 @@ export const Hero: React.FC<HeroProps> = ({
           >
             {copiedCa ? <Check className="w-3.5 h-3.5 text-orange-400" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
+          <span className="text-zinc-600 hidden sm:inline">|</span>
+          <span className="inline-flex items-center gap-1 font-semibold text-amber-300 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/25">
+            <Percent className="w-3 h-3 text-amber-400" />
+            1% tax to holders
+          </span>
         </div>
 
         {/* Mascot Visual Focal Point */}
@@ -168,7 +173,7 @@ export const Hero: React.FC<HeroProps> = ({
           <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-zinc-500 font-mono">
             <span className="flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4 text-orange-400/80" />
-              Read-only. No wallet connection. Public on-chain data only.
+              Read-only. Live NEAR indexer verification. Public ledger data only.
             </span>
           </div>
         </div>
@@ -177,23 +182,43 @@ export const Hero: React.FC<HeroProps> = ({
         <div className="mt-14 w-full max-w-2xl p-5 rounded-xl bg-zinc-900/40 border border-zinc-800 text-left">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-sm font-bold text-white tracking-wide">$ROOSTED TOKEN</span>
-                <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-orange-500/10 text-orange-400 border border-orange-500/25">
-                  COMING SOON
+                <span className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold ${
+                  tokenStatus.isLive 
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25' 
+                    : 'bg-orange-500/10 text-orange-400 border border-orange-500/25'
+                }`}>
+                  {tokenStatus.isLive ? 'LIVE ON MAINNET' : 'COMING SOON'}
+                </span>
+                <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                  <Percent className="w-3 h-3 text-amber-400" />
+                  1% tax to holders
                 </span>
               </div>
               <p className="text-xs text-zinc-400 mt-1">
                 {tokenStatus.launchAnnouncement}
               </p>
             </div>
-            <button
-              type="button"
-              disabled
-              className="px-3.5 py-1.5 rounded-lg bg-zinc-800 text-zinc-500 text-xs font-semibold cursor-not-allowed border border-zinc-700/50 self-start sm:self-center"
-            >
-              BUY $ROOSTED (DISABLED)
-            </button>
+            {tokenStatus.isLive && tokenStatus.dexUrl ? (
+              <a
+                href={tokenStatus.dexUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-400 text-black text-xs font-bold tracking-wide transition-all shadow-sm shadow-orange-500/20 self-start sm:self-center flex items-center gap-1.5"
+              >
+                BUY $ROOSTED
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="px-3.5 py-1.5 rounded-lg bg-zinc-800 text-zinc-500 text-xs font-semibold cursor-not-allowed border border-zinc-700/50 self-start sm:self-center"
+              >
+                BUY $ROOSTED (DISABLED)
+              </button>
+            )}
           </div>
 
           <div className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-zinc-500 font-mono">
@@ -221,9 +246,15 @@ export const Hero: React.FC<HeroProps> = ({
                 )}
               </button>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-zinc-400">Network: <strong className="text-zinc-200">{tokenStatus.network} Mainnet</strong></span>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-1.5 text-amber-300 font-semibold bg-zinc-950 px-2 py-0.5 rounded border border-zinc-800">
+                <span className="text-zinc-500">Tax:</span>
+                <span className="text-orange-400">1% to holders</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-zinc-400">Network: <strong className="text-zinc-200">{tokenStatus.network} Mainnet</strong></span>
+              </div>
             </div>
           </div>
         </div>

@@ -6,21 +6,22 @@ import { HallOfCooked } from './components/HallOfCooked.tsx';
 import { HowItWorks } from './components/HowItWorks.tsx';
 import { PreLaunchModal } from './components/PreLaunchModal.tsx';
 import { RemovalModal } from './components/RemovalModal.tsx';
+import { HoldingStatusModal } from './components/HoldingStatusModal.tsx';
 import { Footer } from './components/Footer.tsx';
 import { TokenStatus, RoastAnalysisResult, HallOfCookedEntry } from './types/roast.ts';
 import { AlertCircle, AlertTriangle } from 'lucide-react';
 
 export default function App() {
   const [tokenStatus, setTokenStatus] = useState<TokenStatus>({
-    isLive: false,
-    contractAddress: 'CA: COMING SOON',
+    isLive: true,
+    contractAddress: 'roosted.near',
     network: 'NEAR Protocol',
     symbol: '$ROOSTED',
     name: 'Roosted Token',
     tagline: 'The owl saw your trades.',
-    dexUrl: null,
-    explorerUrl: null,
-    launchAnnouncement: 'The owl is getting ready. Token details will be announced officially.'
+    dexUrl: 'https://app.ref.finance/#near|roosted.near',
+    explorerUrl: 'https://nearblocks.io/token/roosted.near',
+    launchAnnouncement: 'The owl is watching on NEAR Protocol mainnet. 1% tax to holders on every trade.'
   });
 
   const [hallEntries, setHallEntries] = useState<HallOfCookedEntry[]>([]);
@@ -31,6 +32,13 @@ export default function App() {
   // Modals
   const [isPreLaunchOpen, setIsPreLaunchOpen] = useState(false);
   const [isRemovalOpen, setIsRemovalOpen] = useState(false);
+  const [holdingModal, setHoldingModal] = useState<{
+    isOpen: boolean;
+    isHolder: boolean;
+    walletAddress: string;
+    holdingAmount: string;
+    network?: string;
+  } | null>(null);
   const [lastEnteredAddress, setLastEnteredAddress] = useState('');
 
   // 1. Initial Data Fetching
@@ -75,7 +83,7 @@ export default function App() {
     }
   }, []);
 
-  // 2. Roast Submission Handler
+  // 2. Roast Submission Handler & Holder Verification
   const handleRoastSubmit = async (address: string) => {
     setLastEnteredAddress(address);
     setNotification(null);
@@ -90,35 +98,55 @@ export default function App() {
 
       const data = await res.json();
 
-      if (data.status === 'token_not_launched') {
-        setIsPreLaunchOpen(true);
-      } else if (data.status === 'no_activity') {
-        setNotification({
-          type: 'info',
-          message: 'This owl has nothing to investigate yet. No $ROOSTED trading activity found.'
-        });
-      } else if (data.status === 'invalid_address') {
+      if (data.status === 'invalid_address') {
         setNotification({
           type: 'error',
-          message: data.message || 'Invalid wallet address format.'
+          message: data.message || 'Invalid wallet address format. Enter a valid NEAR, EVM, or Solana public address.'
         });
-      } else if (data.success && data.data) {
+        return;
+      }
+
+      if (data.status === 'error') {
+        setNotification({
+          type: 'error',
+          message: data.message || 'Blockchain indexer communication encountered an issue. Please try again.'
+        });
+        return;
+      }
+
+      // Check whether the wallet is holding $ROOSTED token
+      if (data.isHolder && data.data) {
+        // WALLET IS HOLDING: Signify with pop-up message and show in Hall of Cooked
         setCurrentResult(data.data);
-        // Update URL query string without reloading page
+        setHoldingModal({
+          isOpen: true,
+          isHolder: true,
+          walletAddress: address,
+          holdingAmount: data.holdingAmount || 'Verified $ROOSTED',
+          network: data.network || 'NEAR Protocol'
+        });
+
+        // Update URL query string
         const newUrl = `${window.location.pathname}?roast=${data.data.id}`;
         window.history.pushState({ path: newUrl }, '', newUrl);
-        // Scroll to card
-        window.scrollTo({ top: 180, behavior: 'smooth' });
+
+        // Instantly refresh Hall of Cooked entries
+        fetchStatusAndHall();
       } else {
-        setNotification({
-          type: 'error',
-          message: data.message || 'Analysis failed. Please check the address and try again.'
+        // WALLET IS NOT HOLDING: Signify with pop-up message that it's not holding
+        setHoldingModal({
+          isOpen: true,
+          isHolder: false,
+          walletAddress: address,
+          holdingAmount: '0 $ROOSTED',
+          network: data.network || 'NEAR Protocol'
         });
       }
-    } catch {
+    } catch (err) {
+      console.error('Indexer communication error:', err);
       setNotification({
         type: 'error',
-        message: 'Network error communicating with the blockchain indexer. Please try again.'
+        message: 'Unable to reach the blockchain indexer. Please verify your connection and try again.'
       });
     } finally {
       setIsLoading(false);
@@ -198,6 +226,24 @@ export default function App() {
       </main>
 
       {/* Modals */}
+      {holdingModal && (
+        <HoldingStatusModal
+          isOpen={holdingModal.isOpen}
+          onClose={() => setHoldingModal(null)}
+          isHolder={holdingModal.isHolder}
+          walletAddress={holdingModal.walletAddress}
+          holdingAmount={holdingModal.holdingAmount}
+          network={holdingModal.network}
+          onViewHallOfCooked={() => {
+            const el = document.getElementById('hall-of-cooked');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+          onViewRoast={() => {
+            window.scrollTo({ top: 120, behavior: 'smooth' });
+          }}
+        />
+      )}
+
       <PreLaunchModal
         isOpen={isPreLaunchOpen}
         onClose={() => setIsPreLaunchOpen(false)}

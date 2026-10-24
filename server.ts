@@ -7,6 +7,7 @@ import {
   isTokenLive, 
   validateWalletAddress, 
   getWalletTokenInteractions, 
+  checkWalletTokenHolding,
   CONFIG 
 } from './src/server/blockchain.ts';
 import { buildRoastResult, RawTransactionRecord } from './src/utils/scoringEngine.ts';
@@ -47,7 +48,7 @@ app.get('/api/token-status', (_req: Request, res: Response) => {
   res.json(getTokenStatus());
 });
 
-// 2. Roast Analyzer
+// 2. Roast Analyzer & Holder Verification Endpoint
 app.post('/api/roast/analyze', async (req: Request, res: Response) => {
   const clientIp = req.ip || 'unknown';
   if (!checkRateLimit(clientIp)) {
@@ -79,40 +80,27 @@ app.post('/api/roast/analyze', async (req: Request, res: Response) => {
     return;
   }
 
-  // Check launch status
-  if (!isTokenLive()) {
-    res.status(200).json({
-      success: false,
-      status: 'token_not_launched',
-      message: 'The owl is getting ready. $ROOSTED has not launched yet. Token details will be announced officially.'
-    });
-    return;
-  }
-
   try {
-    const transactions = await getWalletTokenInteractions(address);
-    if (!transactions || transactions.length === 0) {
-      res.status(200).json({
-        success: false,
-        status: 'no_activity',
-        message: 'This owl has nothing to investigate yet. No $ROOSTED trading activity found.'
-      });
-      return;
-    }
+    // Communicate with NEAR Protocol blockchain indexers to verify token holdings
+    const holdingCheck = await checkWalletTokenHolding(address);
 
-    const result = buildRoastResult(
-      address,
-      CONFIG.network,
-      CONFIG.contractAddress,
-      transactions
-    );
+    if (holdingCheck.isHolder && holdingCheck.balanceNumber > 0) {
+      // Wallet IS holding $ROOSTED token!
+      const result = buildRoastResult(
+        address,
+        holdingCheck.network,
+        CONFIG.contractAddress,
+        holdingCheck.transactions
+      );
 
-    roastResultsCache.set(result.id, result);
-    // Also key by address for fast lookup
-    roastResultsCache.set(address.toLowerCase(), result);
+      result.metrics.isHolder = true;
+      result.metrics.netTokenBalanceNumber = holdingCheck.balanceNumber;
+      result.metrics.netTokenBalance = holdingCheck.balanceFormatted;
 
-    // Requirement: ONLY add wallets and info when wallet address pasted holds the $ROOSTED token
-    if (result.metrics.isHolder && result.metrics.netTokenBalanceNumber > 0) {
+      roastResultsCache.set(result.id, result);
+      roastResultsCache.set(address.toLowerCase(), result);
+
+      // Add to Hall of Cooked (only wallets holding $ROOSTED)
       const existingIdx = hallOfCookedList.findIndex(
         e => e.walletAddress.toLowerCase() === address.toLowerCase()
       );
@@ -126,7 +114,7 @@ app.post('/api/roast/analyze', async (req: Request, res: Response) => {
         roast: result.headlineRoast,
         buys: result.metrics.buysCount,
         sells: result.metrics.sellsCount,
-        holdingAmount: `${result.metrics.netTokenBalance} $ROOSTED`,
+        holdingAmount: holdingCheck.balanceFormatted,
         analyzedAt: result.analyzedAt,
         isMostCooked: false
       };
@@ -139,25 +127,43 @@ app.post('/api/roast/analyze', async (req: Request, res: Response) => {
 
       // Re-sort by highest cooked score
       hallOfCookedList.sort((a, b) => b.cookedScore - a.cookedScore);
-      hallOfCookedList = hallOfCookedList.slice(0, 25).map((e, idx) => ({
+      hallOfCookedList = hallOfCookedList.slice(0, 50).map((e, idx) => ({
         ...e,
         rank: idx + 1,
         isMostCooked: idx === 0
       }));
-    }
 
-    res.json({
-      success: true,
-      status: 'success',
-      message: 'Wallet analyzed successfully.',
-      data: result
-    });
+      res.json({
+        success: true,
+        status: 'success',
+        isHolder: true,
+        holdingAmount: holdingCheck.balanceFormatted,
+        walletAddress: address,
+        network: holdingCheck.network,
+        message: `Verified $ROOSTED holder on ${holdingCheck.network}. Added to Hall of Cooked!`,
+        data: result
+      });
+      return;
+    } else {
+      // Wallet is NOT holding $ROOSTED token
+      res.json({
+        success: true,
+        status: 'not_holding',
+        isHolder: false,
+        holdingAmount: '0 $ROOSTED',
+        walletAddress: address,
+        network: holdingCheck.network,
+        message: `The owl queried the blockchain indexer. Wallet ${address} does not hold any $ROOSTED tokens.`
+      });
+      return;
+    }
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);
-    res.status(500).json({
+    console.warn('[Blockchain Indexer Query Warning]:', errorMsg);
+    res.json({
       success: false,
       status: 'error',
-      message: `Blockchain data retrieval failed: ${errorMsg}. Please try again.`
+      message: `Blockchain indexer check could not be completed: ${errorMsg}. Please try again.`
     });
   }
 });
