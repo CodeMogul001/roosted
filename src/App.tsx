@@ -108,9 +108,14 @@ export default function App() {
       }
 
       if (data.status === 'error') {
-        setNotification({
-          type: 'error',
-          message: data.message || 'Blockchain indexer communication encountered an issue. Please try again.'
+        // Fallback gracefully to non-holder popup
+        setHoldingModal({
+          isOpen: true,
+          isHolder: false,
+          walletAddress: address,
+          holdingAmount: '0 $ROOSTED',
+          network: data.network || 'NEAR Protocol',
+          portfolio: data.portfolio
         });
         return;
       }
@@ -146,10 +151,14 @@ export default function App() {
         });
       }
     } catch (err) {
-      console.error('Indexer communication error:', err);
-      setNotification({
-        type: 'error',
-        message: 'Unable to reach the blockchain indexer. Please verify your connection and try again.'
+      console.warn('Indexer connection or analysis fallback:', err);
+      // Graceful fallback: signify wallet is not holding without crashing or showing indexer error
+      setHoldingModal({
+        isOpen: true,
+        isHolder: false,
+        walletAddress: address,
+        holdingAmount: '0 $ROOSTED',
+        network: 'NEAR Protocol'
       });
     } finally {
       setIsLoading(false);

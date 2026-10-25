@@ -1,6 +1,12 @@
 import { TokenStatus, NearTokenHolding, NearWalletPortfolio } from '../types/roast.ts';
 import { RawTransactionRecord } from '../utils/scoringEngine.ts';
 
+export const NEAR_RPC_ENDPOINTS = [
+  'https://free.rpc.fastnear.com',
+  process.env.NEAR_RPC_URL || 'https://rpc.mainnet.near.org',
+  'https://1rpc.io/near'
+];
+
 // Environment variables or runtime configuration - configured strictly for NEAR Protocol Mainnet
 export const CONFIG = {
   contractAddress: process.env.ROOSTED_CONTRACT_ADDRESS || 'roosted.near',
@@ -8,7 +14,7 @@ export const CONFIG = {
   symbol: '$ROOSTED',
   name: 'Roosted Token',
   tagline: 'The owl saw your trades.',
-  nearRpcUrl: process.env.NEAR_RPC_URL || 'https://rpc.mainnet.near.org',
+  nearRpcUrl: process.env.NEAR_RPC_URL || 'https://free.rpc.fastnear.com',
   fastnearUrl: 'https://api.fastnear.com',
   nearblocksUrl: 'https://api.nearblocks.io',
   baseRpcUrl: process.env.BASE_RPC_URL || 'https://mainnet.base.org',
@@ -22,6 +28,35 @@ export const KNOWN_NEAR_DEX_ROUTERS = new Set([
   'ref-finance-101.near',
   'router.jumbo.near'
 ]);
+
+/**
+ * Resilient multi-RPC query runner that fails over automatically across NEAR endpoints
+ */
+export async function queryNearRpcWithFallback(
+  payload: Record<string, unknown>,
+  timeoutMs = 2500
+): Promise<any | null> {
+  const endpoints = [CONFIG.nearRpcUrl, ...NEAR_RPC_ENDPOINTS.filter(u => u !== CONFIG.nearRpcUrl)];
+  for (const url of endpoints) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(timeoutMs)
+      });
+      if (res.ok) {
+        const data = await res.json() as any;
+        if (data && (data.result !== undefined || data.error)) {
+          return data;
+        }
+      }
+    } catch {
+      // Continue to next available endpoint
+    }
+  }
+  return null;
+}
 
 export interface KnownNearTokenMeta {
   symbol: string;
@@ -273,29 +308,16 @@ async function fetchNep141MetadataRpc(contractId: string): Promise<{ symbol: str
       }
     };
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2500);
-
-    const res = await fetch(CONFIG.nearRpcUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
-
-    if (res.ok) {
-      const data = await res.json() as { result?: { result?: number[] } };
-      if (data.result?.result) {
-        const rawJson = Buffer.from(data.result.result).toString('utf-8');
-        const parsed = JSON.parse(rawJson) as { symbol?: string; name?: string; decimals?: number; icon?: string };
-        return {
-          symbol: parsed.symbol || contractId.split('.')[0].toUpperCase(),
-          name: parsed.name || contractId,
-          decimals: typeof parsed.decimals === 'number' ? parsed.decimals : 18,
-          icon: parsed.icon || null
-        };
-      }
+    const data = await queryNearRpcWithFallback(payload, 2000);
+    if (data && data.result?.result) {
+      const rawJson = Buffer.from(data.result.result).toString('utf-8');
+      const parsed = JSON.parse(rawJson) as { symbol?: string; name?: string; decimals?: number; icon?: string };
+      return {
+        symbol: parsed.symbol || contractId.split('.')[0].toUpperCase(),
+        name: parsed.name || contractId,
+        decimals: typeof parsed.decimals === 'number' ? parsed.decimals : 18,
+        icon: parsed.icon || null
+      };
     }
   } catch {
     // Return fallback
@@ -347,7 +369,7 @@ export async function fetchNearWalletPortfolio(walletAddress: string): Promise<N
 
   // Run all 3 queries in parallel with strict 3s timeouts
   await Promise.allSettled([
-    // 1. Fetch Native NEAR balance via RPC view_account
+    // 1. Fetch Native NEAR balance via multi-RPC view_account
     (async () => {
       try {
         const payload = {
@@ -361,29 +383,16 @@ export async function fetchNearWalletPortfolio(walletAddress: string): Promise<N
           }
         };
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2800);
-
-        const rpcRes = await fetch(CONFIG.nearRpcUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-
-        if (rpcRes.ok) {
-          const data = await rpcRes.json() as { result?: { amount?: string } };
-          if (data.result?.amount) {
-            const rawAmount = data.result.amount;
-            const { formatted, numeric } = formatTokenBalance(rawAmount, 24);
-            nativeNear = {
-              balanceRaw: rawAmount,
-              balanceFormatted: `${formatted} NEAR`,
-              balanceNumber: numeric,
-              symbol: 'NEAR'
-            };
-          }
+        const data = await queryNearRpcWithFallback(payload, 2500);
+        if (data && data.result?.amount) {
+          const rawAmount = data.result.amount;
+          const { formatted, numeric } = formatTokenBalance(rawAmount, 24);
+          nativeNear = {
+            balanceRaw: rawAmount,
+            balanceFormatted: `${formatted} NEAR`,
+            balanceNumber: numeric,
+            symbol: 'NEAR'
+          };
         }
       } catch {
         // Fallback below if needed
@@ -523,30 +532,17 @@ export async function fetchNearWalletPortfolio(walletAddress: string): Promise<N
         }
       };
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
-
-      const rpcRes = await fetch(CONFIG.nearRpcUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-
-      if (rpcRes.ok) {
-        const rpcData = await rpcRes.json() as { result?: { result?: number[] } };
-        if (rpcData.result?.result) {
-          const rawStr = Buffer.from(rpcData.result.result).toString('utf-8').replace(/"/g, '');
-          if (rawStr && rawStr !== '0') {
-            rawTokensMap.set(roostedKey, {
-              contractId: CONFIG.contractAddress,
-              rawBalance: rawStr,
-              symbol: '$ROOSTED',
-              name: 'Roosted Token',
-              decimals: 18
-            });
-          }
+      const rpcData = await queryNearRpcWithFallback(payload, 2000);
+      if (rpcData && rpcData.result?.result) {
+        const rawStr = Buffer.from(rpcData.result.result).toString('utf-8').replace(/"/g, '');
+        if (rawStr && rawStr !== '0') {
+          rawTokensMap.set(roostedKey, {
+            contractId: CONFIG.contractAddress,
+            rawBalance: rawStr,
+            symbol: '$ROOSTED',
+            name: 'Roosted Token',
+            decimals: 18
+          });
         }
       }
     } catch {
